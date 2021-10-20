@@ -94,27 +94,29 @@ class EstampilladoController extends ApiController
         ]);
     }
 
-    private function generateQr($url){
+    private function generateQr($url, $key = "622ba6892dmsh07d7bf795f1a476p1d5971jsnb43d3e4bada2"){
         $client = new Client([
             'base_uri' => 'https://neutrinoapi-qr-code.p.rapidapi.com'
         ]);       
 
         $response = $client->request('POST', 'qr-code', [
-            'verify' => false,
+            'verify' => (($this->getParameter('kernel.environment') == "dev")? false : true ),
             'headers' => [
                 'content-type' => 'application/x-www-form-urlencoded',
                 'x-rapidapi-host' => 'neutrinoapi-qr-code.p.rapidapi.com',
-                // 'x-rapidapi-key' => '4fc11a3da3mshe830a408f668c5ap1439f7jsn1d0514b93f1d'
-                'x-rapidapi-key' => '622ba6892dmsh07d7bf795f1a476p1d5971jsnb43d3e4bada2'
+                'x-rapidapi-key' => $key
             ],
             'form_params' => [
                 "content" => $url,
-                "width" => "128",
-                "height" => "128",
+                "width" => "256",
+                "height" => "256",
                 "fg-color" => "#000000",
                 "bg-color" => "#ffffff"
             ]
         ]);
+        if($response->getStatusCode() != 200){
+            $this->generateQr($url,"4fc11a3da3mshe830a408f668c5ap1439f7jsn1d0514b93f1d");
+        }
 
         return (string) $response->getBody();
     }
