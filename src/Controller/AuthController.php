@@ -25,9 +25,15 @@ class AuthController extends ApiController
         $email = $request->get('email');
 
         if (empty($username) || empty($password) || empty($email)){
-            return $this->respondValidationError("Invalid Username or Password or Email");
+            return $this->respondValidationError("Invalido Username or Password or Email");
         }
 
+        $entityManager = $this->getDoctrine()->getManager();
+        $user = $entityManager->getRepository(User::class)->findOneBy(['username' => $username]);
+
+        if(!empty($user)){
+            return $this->respondValidationError("El nombre de usuario se encuentra en uso");
+        }
 
         $user = new User($username);
         $user->setPassword($encoder->encodePassword($user, $password));
@@ -35,7 +41,7 @@ class AuthController extends ApiController
         $user->setUsername($username);
         $em->persist($user);
         $em->flush();
-        return $this->respondWithSuccess(sprintf('User %s successfully created', $user->getUsername()));
+        return $this->respondWithSuccess(sprintf('El usuario %s se creo correctamente', $user->getUsername()));
     }
 
     /**
