@@ -2,7 +2,7 @@
 
 namespace App\Repository;
 
-use App\Entity\Estampillados;
+use App\Entity\Estampillado;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -12,11 +12,11 @@ use Doctrine\Persistence\ManagerRegistry;
  * @method Estampillados[]    findAll()
  * @method Estampillados[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  */
-class EstampilladosRepository extends ServiceEntityRepository
+class EstampilladoRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
     {
-        parent::__construct($registry, Estampillados::class);
+        parent::__construct($registry, Estampillado::class);
     }
 
     // /**

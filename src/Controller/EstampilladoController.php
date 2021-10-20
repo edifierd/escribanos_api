@@ -7,49 +7,115 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
-use App\Entity\Estampillados;
+use App\Entity\Estampillado;
+
+use GuzzleHttp\Client;
+use GuzzleHttp\Psr7;
 
 /**
  * @return JsonResponse
  * @Route("/api/estampillado", name="api_estampillado")
  */
-class EstampilladoController extends AbstractController
+class EstampilladoController extends ApiController
 {
 
     /**
      * @return JsonResponse
-     * @Route("", name="get_estampillado", methods={"GET"})
+     * @Route("/{hash}", name="get_estampillado_by_hash", methods={"GET"})
+     */
+    public function getEstampillado($hash){
+        $entityManager = $this->getDoctrine()->getManager();
+        $estampillado = $entityManager->getRepository(Estampillado::class)->findOneBy(['hash' => $hash]);
+
+        return $this->response([
+            "num_expediente" => $estampillado->getNumExpediente(),
+            "hash" => $estampillado->getHash(),
+            "qr" => $estampillado->getQr(),
+        ]);
+    }
+
+
+    /**
+     * @return JsonResponse
+     * @Route("", name="get_estampillados", methods={"GET"})
      */
     public function getEstampillados(){
         $entityManager = $this->getDoctrine()->getManager();
-        $estampillados = $entityManager->getRepository(Estampillados::class)->findAll();
+        $estampillados = $entityManager->getRepository(Estampillado::class)->findAll();
 
         $rta=[];
         foreach ($estampillados as $key => $value) {
             $rta[] = [
                 "num_expediente" => $value->getNumExpediente(),
                 "hash" => $value->getHash(),
+                "qr" => $value->getQr(),
             ];
         }
-        return new JsonResponse($rta, 200);
+        return $this->response($rta);
     }
 
     /**
      * @return JsonResponse
      * @Route("", name="new_estampillado", methods={"POST"})
      */
-    public function createEstampillado(){
-        $entityManager = $this->getDoctrine()->getManager();
+    public function createEstampillado(Request $request){
+        $request = $this->transformJsonBody($request);
+        $estatuto = $request->get('estatuto');
+        $num_expediente = $request->get('num_expediente');
+        $urlBase = $request->get('url_organismo_solicitante');
 
-        $estampillado = new Estampillados();
-        $estampillado->setEstatuto("dvdsfvbas");
-        $estampillado->setNumExpediente("dvdsfvbas");
-        $estampillado->setHash("dvdsfvbas");
-        $entityManager->persist($estampillado);
-        $entityManager->flush();
+        if(
+            $estatuto == null || trim($estatuto) == '' ||
+            $num_expediente == null || trim($num_expediente) == '' ||
+            $urlBase == null || trim($urlBase) == ''
+        ){
+            return $this->respondValidationError("Todos los parametros son obligatorios");
+        }
 
-        return $this->json([
+        $hash = md5(random_bytes(20));
+        $qr = base64_encode($this->generateQr($urlBase."/".$hash));
+        
+        try {
+            $entityManager = $this->getDoctrine()->getManager();
+            $estampillado = new Estampillado();
+            $estampillado->setEstatuto($estatuto);
+            $estampillado->setNumExpediente($num_expediente);
+            $estampillado->setHash($hash);
+            $estampillado->setQr($qr);
+            $entityManager->persist($estampillado);
+            $entityManager->flush();
+        } catch (\Exception $e) {
+            $this->setStatusCode(500);
+            return $this->respondWithErrors($e->getMessage());
+        }        
+
+        return $this->respondCreated([
             "hash" => $estampillado->getHash()
         ]);
+    }
+
+    private function generateQr($url){
+        $client = new Client([
+            'base_uri' => 'https://neutrinoapi-qr-code.p.rapidapi.com'
+        ]);       
+
+        $response = $client->request('POST', 'qr-code', [
+            'verify' => false,
+            'headers' => [
+                'content-type' => 'application/x-www-form-urlencoded',
+                'x-rapidapi-host' => 'neutrinoapi-qr-code.p.rapidapi.com',
+                // 'x-rapidapi-key' => '4fc11a3da3mshe830a408f668c5ap1439f7jsn1d0514b93f1d'
+                'x-rapidapi-key' => '622ba6892dmsh07d7bf795f1a476p1d5971jsnb43d3e4bada2'
+            ],
+            'form_params' => [
+                "content" => $url,
+                "width" => "128",
+                "height" => "128",
+                "fg-color" => "#000000",
+                "bg-color" => "#ffffff"
+            ]
+        ]);
+
+        return (string) $response->getBody();
     }
 }

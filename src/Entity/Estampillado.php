@@ -2,13 +2,14 @@
 
 namespace App\Entity;
 
-use App\Repository\EstampilladosRepository;
+use App\Repository\EstampilladoRepository;
 use Doctrine\ORM\Mapping as ORM;
 
+
 /**
- * @ORM\Entity(repositoryClass=EstampilladosRepository::class)
+ * @ORM\Entity(repositoryClass=EstampilladoRepository::class)
  */
-class Estampillados
+class Estampillado
 {
     /**
      * @ORM\Id
@@ -23,14 +24,19 @@ class Estampillados
     private $estatuto;
 
     /**
-     * @ORM\Column(type="string", length=255)
+     * @ORM\Column(type="string", length=255, unique=true)
      */
     private $num_expediente;
 
     /**
-     * @ORM\Column(type="string", length=255)
+     * @ORM\Column(type="string", length=255, unique=true)
      */
     private $hash;
+
+    /**
+     * @ORM\Column(type="text")
+     */
+    private $qr;
 
     public function getId(): ?int
     {
@@ -69,6 +75,18 @@ class Estampillados
     public function setHash(string $hash): self
     {
         $this->hash = $hash;
+
+        return $this;
+    }
+
+    public function getQr(): ?string
+    {
+        return $this->qr;
+    }
+
+    public function setQr(string $qr): self
+    {
+        $this->qr = $qr;
 
         return $this;
     }
