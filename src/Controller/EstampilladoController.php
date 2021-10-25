@@ -18,7 +18,7 @@ use GuzzleHttp\Psr7;
  */
 class EstampilladoController extends ApiController
 {
-
+  
     /**
      * @return JsonResponse
      * @Route("/{hash}", name="get_estampillado_by_hash", methods={"GET"})

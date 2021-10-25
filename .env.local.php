@@ -9,4 +9,5 @@ return array (
   'JWT_SECRET_KEY' => '%kernel.project_dir%/config/jwt/private.pem',
   'JWT_PUBLIC_KEY' => '%kernel.project_dir%/config/jwt/public.pem',
   'JWT_PASSPHRASE' => 'sociedad_anonima',
+  'TOKEN_TTL' => '40',
 );

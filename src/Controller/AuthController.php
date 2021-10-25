@@ -12,9 +12,29 @@ namespace App\Controller;
  use Symfony\Component\Routing\Annotation\Route;
  use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
  use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 
 class AuthController extends ApiController
 {
+
+    private $jwtManager;
+    private $tokenStorageInterface;
+
+    public function __construct(TokenStorageInterface $tokenStorageInterface, JWTTokenManagerInterface $jwtManager)
+    {
+        $this->jwtManager = $jwtManager;
+        $this->tokenStorageInterface = $tokenStorageInterface;
+    }
+
+    /**
+     * @return JsonResponse
+     * @Route("/api/user", name="get_user", methods={"GET"})
+     */
+    public function decodeUser(){
+        $decodedJwtToken = $this->jwtManager->decode($this->tokenStorageInterface->getToken());
+
+        return $this->response($decodedJwtToken);
+    }
 
     public function register(Request $request, UserPasswordEncoderInterface $encoder)
     {
@@ -44,14 +64,18 @@ class AuthController extends ApiController
         return $this->respondWithSuccess(sprintf('El usuario %s se creo correctamente', $user->getUsername()));
     }
 
-    /**
-     * @param UserInterface $user
-     * @param JWTTokenManagerInterface $JWTManager
-     * @return JsonResponse
-     */
-    public function getTokenUser(UserInterface $user, JWTTokenManagerInterface $JWTManager)
-    {
-        return new JsonResponse(['token' => $JWTManager->create($user)]);
-    }
+    // /**
+    //  * @param UserInterface $user
+    //  * @param JWTTokenManagerInterface $JWTManager
+    //  * @return JsonResponse
+    //  */
+    // public function getTokenUser(UserInterface $user, JWTTokenManagerInterface $JWTManager)
+    // {
+    //     dd("acacacac");
+    //     $token = $JWTManager->create($user);
+    //     dd($JWTManager->decode($token));
+
+    //     return new JsonResponse(['token' => null]);
+    // }
 
 }
