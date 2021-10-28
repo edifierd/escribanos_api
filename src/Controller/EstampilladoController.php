@@ -88,6 +88,9 @@ class EstampilladoController extends ApiController
             $estampillado->setQr($qr);
             $entityManager->persist($estampillado);
             $entityManager->flush();
+        } catch (\Doctrine\DBAL\Exception\UniqueConstraintViolationException $e) {
+            $this->setStatusCode(500);
+            return $this->respondWithErrors("El número de expediente ya ha sido estampillado");
         } catch (\Exception $e) {
             $this->setStatusCode(500);
             return $this->respondWithErrors($e->getMessage());
@@ -117,23 +120,24 @@ class EstampilladoController extends ApiController
             'base_uri' => 'https://neutrinoapi-qr-code.p.rapidapi.com'
         ]);       
 
-        $response = $client->request('POST', 'qr-code', [
-            'verify' => (($this->getParameter('kernel.environment') == "dev")? false : true ),
-            'headers' => [
-                'content-type' => 'application/x-www-form-urlencoded',
-                'x-rapidapi-host' => 'neutrinoapi-qr-code.p.rapidapi.com',
-                'x-rapidapi-key' => $key
-            ],
-            'form_params' => [
-                "content" => $url,
-                "width" => "256",
-                "height" => "256",
-                "fg-color" => "#000000",
-                "bg-color" => "#ffffff"
-            ]
-        ]);
-        if($response->getStatusCode() != 200){
-            $this->generateQr($url,"4fc11a3da3mshe830a408f668c5ap1439f7jsn1d0514b93f1d");
+        try {
+            $response = $client->request('POST', 'qr-code', [
+                'verify' => (($this->getParameter('kernel.environment') == "dev")? false : true ),
+                'headers' => [
+                    'content-type' => 'application/x-www-form-urlencoded',
+                    'x-rapidapi-host' => 'neutrinoapi-qr-code.p.rapidapi.com',
+                    'x-rapidapi-key' => $key
+                ],
+                'form_params' => [
+                    "content" => $url,
+                    "width" => "256",
+                    "height" => "256",
+                    "fg-color" => "#000000",
+                    "bg-color" => "#ffffff"
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return $this->generateQr($url,"4fc11a3da3mshe830a408f668c5ap1439f7jsn1d0514b93f1d");
         }
 
         return (string) $response->getBody();
