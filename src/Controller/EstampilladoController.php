@@ -72,6 +72,10 @@ class EstampilladoController extends ApiController
             return $this->respondValidationError("Todos los parametros son obligatorios");
         }
 
+        if(!$this->is_base64($estatuto)){
+            return $this->respondValidationError("El estatuto parece no ser un archivo válido");
+        }
+
         $hash = md5(random_bytes(20));
         $qr = base64_encode($this->generateQr($urlBase."/".$hash));
         
@@ -92,6 +96,20 @@ class EstampilladoController extends ApiController
         return $this->respondCreated([
             "hash" => $estampillado->getHash()
         ]);
+    }
+
+    private function is_base64($s){
+        // Check if there are valid base64 characters
+        if (!preg_match('/^[a-zA-Z0-9\/\r\n+]*={0,2}$/', $s)) return false;
+    
+        // Decode the string in strict mode and check the results
+        $decoded = base64_decode($s, true);
+        if(false === $decoded) return false;
+    
+        // Encode the string again
+        if(base64_encode($decoded) != $s) return false;
+    
+        return true;
     }
 
     private function generateQr($url, $key = "622ba6892dmsh07d7bf795f1a476p1d5971jsnb43d3e4bada2"){

@@ -9,6 +9,6 @@ return array (
   'JWT_SECRET_KEY' => '%kernel.project_dir%/config/jwt/private.pem',
   'JWT_PUBLIC_KEY' => '%kernel.project_dir%/config/jwt/public.pem',
   'JWT_PASSPHRASE' => 'sociedad_anonima',
-  'TOKEN_TTL' => '40',
+  'TOKEN_TTL' => '3600',
   'CORS_ALLOW_ORIGIN' => '^https?://(localhost|127\\.0\\.0\\.1)(:[0-9]+)?$',
 );
